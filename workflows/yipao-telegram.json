@@ -1,0 +1,574 @@
+{
+  "name": "YIPAO Telegram - Guía turística del Eje Cafetero",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 1️⃣ Entrada desde Telegram\nEl **Telegram Trigger** recibe cada mensaje. Solo los **textos** van al agente; fotos, audios o stickers reciben un aviso. El comando /start se convierte en un saludo.",
+        "height": 560,
+        "width": 820,
+        "color": 7
+      },
+      "id": "34fdb1d3-e526-4cf6-9c2e-eef680fa9238",
+      "name": "Nota entrada",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2️⃣ Agente YIPAO\nOrquestador con herramientas y **memoria por chat** (cada persona tiene su propia conversación). Mientras piensa, el bot muestra *escribiendo...*",
+        "height": 560,
+        "width": 420,
+        "color": 4
+      },
+      "id": "42c6dd32-22cb-4782-9a2c-3852955cbdb4",
+      "name": "Nota agente",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        864,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3️⃣ Salida a Telegram\nConvertimos la respuesta a formato de Telegram (negrita, viñetas) y dividimos respuestas largas en varios mensajes.",
+        "height": 560,
+        "width": 520,
+        "color": 5
+      },
+      "id": "99992497-b1e5-4e00-8e85-cc19dd8ddfff",
+      "name": "Nota salida",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4️⃣ Modelo, memoria y herramientas\n🧠 Gemini · 💾 Memoria por chat · 🗺️ catalogo_destinos · 🌦️ consultar_clima (Open-Meteo) · 💰 calcular_presupuesto · 📖 Wikipedia · 🧮 Calculadora · 🤔 Pensar",
+        "height": 360,
+        "width": 1840,
+        "color": 6
+      },
+      "id": "dbd8c572-474c-47c6-8717-a188a2cd9ade",
+      "name": "Nota herramientas",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "59cffb4f-dfea-4579-b493-d5d16fd657b2",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        272
+      ],
+      "webhookId": "99037920-2db9-4a54-9074-b0b9072cee9c",
+      "credentials": {
+        "telegramApi": {
+          "id": "F6Chs5BabGxnxYgJ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "df84daae-cb06-4151-ba7a-e7b44de8e8bf",
+              "leftValue": "={{ $json.message?.text }}",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "97e94a50-9f04-47b6-9600-9f6a5a4705a6",
+      "name": "¿Es texto?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        272,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "🚙☕ ¡Hola! Por ahora solo entiendo mensajes de texto. Escríbeme cuántos días tienes y qué te gusta hacer, y te armo el plan por el Quindío.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "20b448dd-20d8-4903-bdcb-4c94f3e390e5",
+      "name": "Avisar: solo texto",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        432
+      ],
+      "webhookId": "936ade01-10cc-4a9d-ae65-73f5b1774a32",
+      "credentials": {
+        "telegramApi": {
+          "id": "F6Chs5BabGxnxYgJ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1015146-28ce-4c44-8f67-18ca34466b2e",
+              "name": "chatInput",
+              "value": "={{ $json.message.text.startsWith('/start') ? 'Hola' : $json.message.text }}",
+              "type": "string"
+            },
+            {
+              "id": "f6909584-fe3b-49b9-8fe4-011a8bfa61d7",
+              "name": "sessionId",
+              "value": "={{ String($json.message.chat.id) }}",
+              "type": "string"
+            },
+            {
+              "id": "5a01c8eb-a100-4087-aee5-6ec77fa5a357",
+              "name": "nombre",
+              "value": "={{ $json.message.from?.first_name || 'viajero' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "28faa94a-af79-48b5-ba68-66fd30c702b5",
+      "name": "Preparar mensaje",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendChatAction",
+        "chatId": "={{ $('Preparar mensaje').item.json.sessionId }}"
+      },
+      "id": "721d94c2-e5da-4806-ad9d-472f156bfd85",
+      "name": "Mostrar 'escribiendo...'",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        704,
+        384
+      ],
+      "webhookId": "af5a710b-645c-417c-afa3-348b2cfa6ad1",
+      "credentials": {
+        "telegramApi": {
+          "id": "F6Chs5BabGxnxYgJ",
+          "name": "Telegram account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=[Viajero: {{ $json.nombre }}]\n{{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "Eres YIPAO 🚙☕, guía turístico virtual del Quindío y el Eje Cafetero colombiano (Paisaje Cultural Cafetero, Patrimonio de la Humanidad UNESCO desde 2011). Tu nombre viene de los 'yipaos', los Jeep Willys cargados que son símbolo de la región.\n\nTU MISIÓN: ayudar a cada viajero a planear un viaje personalizado, realista y con presupuesto.\n\nFLUJO DE TRABAJO:\n1. Si el viajero quiere armar un plan y aún no lo sabes, pregúntale en UN solo mensaje corto: cuántos días, cuántas personas, nivel de presupuesto (económico, medio o premium), intereses (naturaleza, cultura, café, familia/niños, aventura, gastronomía) y desde dónde viene.\n2. Usa 'catalogo_destinos' para elegir los lugares según los intereses. NO inventes destinos, precios ni coordenadas: usa solo los del catálogo.\n3. Usa 'consultar_clima' con las coordenadas del catálogo para revisar el pronóstico de los próximos días y adaptar el plan (actividades al aire libre en los días con menos lluvia).\n4. Usa 'calcular_presupuesto' (y convierte su tabla a lista) con las personas, días, nivel y la suma de las entradas de las actividades elegidas.\n5. Usa 'Pensar' para organizar la ruta de forma lógica geográficamente (no ir y volver entre municipios lejanos el mismo día).\n\nFORMATO PARA TELEGRAM (muy importante, Telegram NO muestra tablas ni títulos Markdown):\n- Usa *negrita* para resaltar. NO uses tablas, ni '#', ni '|'.\n- Itinerario como lista con emojis, una línea por actividad: '🕗 8:00 a. m. — Yipao a Cocora 🚙 (tip: llevar impermeable)'.\n- Separa cada día con una línea en blanco y un encabezado como '*📅 Día 1 — Salento y Cocora*'.\n- El presupuesto como lista: '🏨 Alojamiento: $560.000'.\n- Sé conciso: máximo unas 3.000 letras por respuesta. Si el plan es largo, entrega los primeros días y ofrece enviar el resto.\n- Saluda al viajero por su nombre la primera vez.\n\nINTERPRETACIÓN DEL CLIMA (código WMO): 0 despejado ☀️, 1-3 parcialmente nublado ⛅, 45-48 niebla 🌫️, 51-67 llovizna/lluvia 🌧️, 80-82 aguaceros ⛈️, 95-99 tormenta eléctrica ⚡.\n\nREGLAS:\n- Aclara siempre que los precios son de referencia y deben verificarse en los canales oficiales de cada lugar.\n- Para preguntas de historia o cultura usa 'Wikipedia' y menciona que la consultaste.\n- Si te escriben en inglés, responde en inglés; si no, en español colombiano, cálido y cercano.\n- Si preguntan algo que no tiene que ver con turismo en el Eje Cafetero, responde amablemente que tu especialidad es la región y redirige.",
+          "maxIterations": 12
+        }
+      },
+      "id": "7b191b28-a6cc-4b48-a675-763b165e4eda",
+      "name": "YIPAO (Agente orquestador)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        912,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Convierte el Markdown del agente a HTML de Telegram y lo divide en mensajes de máx. 3.800 caracteres\nconst LIMITE = 3800;\nlet t = String($input.first().json.output || '').trim();\nif (!t) t = 'Uy, se me enredó el yipao 🚙💨. ¿Me repites tu mensaje, por favor?';\n\nt = t\n  .replace(/^[ \\t]*\\|?[ \\t]*:?-{3,}.*\\n?/gm, '')                         // separadores de tabla\n  .replace(/^[ \\t]*\\|(.+)\\|[ \\t]*$/gm, (m, f) =>                          // filas de tabla -> viñetas\n    '• ' + f.split('|').map(c => c.trim()).filter(Boolean).join(' — '))\n  .replace(/^[ \\t]*[-*][ \\t]+/gm, '• ')                                  // viñetas\n  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')    // escapar HTML\n  .replace(/^#{1,6}[ \\t]*(.+)$/gm, '<b>$1</b>')                          // títulos\n  .replace(/\\*\\*(.+?)\\*\\*/g, '<b>$1</b>')                                // **negrita**\n  .replace(/\\*([^*\\n]+?)\\*/g, '<b>$1</b>')                               // *negrita*\n  .replace(/\\*/g, '')                                                    // asteriscos sueltos\n  .replace(/\\n{3,}/g, '\\n\\n')\n  .trim();\n\nconst partes = [];\nlet actual = '';\nfor (const p of t.split('\\n\\n')) {\n  if ((actual + '\\n\\n' + p).length > LIMITE && actual) { partes.push(actual); actual = p; }\n  else actual = actual ? actual + '\\n\\n' + p : p;\n}\nif (actual) partes.push(actual);\nconst finales = partes.flatMap(p => p.length > LIMITE ? p.replace(/<\\/?b>/g, '').match(new RegExp(`[\\\\s\\\\S]{1,${LIMITE}}`, 'g')) : [p]);\nreturn finales.map(mensaje => ({ json: { mensaje } }));"
+      },
+      "id": "3c9a0330-d677-42b6-b8ab-7980ee17aff7",
+      "name": "Formatear para Telegram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Preparar mensaje').item.json.sessionId }}",
+        "text": "={{ $json.mensaje }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "6e09c8da-c702-41e6-aecc-1a8971860525",
+      "name": "Enviar respuesta",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1632,
+        144
+      ],
+      "webhookId": "6c23f60b-6184-4aed-a074-da73ad153328",
+      "credentials": {
+        "telegramApi": {
+          "id": "F6Chs5BabGxnxYgJ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.7-flash",
+        "options": {
+          "maxOutputTokens": 4096,
+          "temperature": 0.5
+        }
+      },
+      "id": "2ea1cde4-ac83-4b16-8233-1904d6986d8c",
+      "name": "Google Gemini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        48,
+        720
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "le4WsUN4qP3Ldh3I",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Preparar mensaje').item.json.sessionId }}",
+        "contextWindowLength": 20
+      },
+      "id": "2a0405a0-67cc-44c5-a665-c70a8280c0b7",
+      "name": "Memoria por chat",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        272,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "name": "catalogo_destinos",
+        "description": "Base de datos de destinos turísticos del Quindío con municipio, coordenadas (lat, lon), intereses, descripción, duración, precio de entrada de referencia en COP y tips. Entrada: un interés (naturaleza, cultura, cafe, familia, aventura, gastronomia), un municipio, el nombre de un lugar o 'todos'.",
+        "jsCode": "// Herramienta: catalogo_destinos\n// Entrada (query): municipio, nombre de lugar o interés (naturaleza, cultura, cafe, familia, aventura, gastronomia) o \"todos\"\nconst destinos = [\n  { nombre: 'Valle de Cocora', municipio: 'Salento', lat: 4.638, lon: -75.487, intereses: ['naturaleza','aventura'],\n    descripcion: 'Bosque de palma de cera, árbol nacional de Colombia. Caminatas de 2 a 6 horas.', duracion: 'Medio día o día completo', entrada_cop: 20000,\n    tip: 'Llegar temprano en yipao desde la plaza de Salento; llevar impermeable y botas.' },\n  { nombre: 'Pueblo de Salento y Calle Real', municipio: 'Salento', lat: 4.637, lon: -75.570, intereses: ['cultura','gastronomia'],\n    descripcion: 'Arquitectura colonial colorida, artesanías y el mirador Alto de la Cruz.', duracion: '3 horas', entrada_cop: 0,\n    tip: 'Probar la trucha con patacón.' },\n  { nombre: 'Filandia y Mirador Colina Iluminada', municipio: 'Filandia', lat: 4.674, lon: -75.658, intereses: ['cultura','naturaleza'],\n    descripcion: 'Pueblo de cestería y balcones; mirador con vista a tres departamentos.', duracion: '3 a 4 horas', entrada_cop: 10000,\n    tip: 'Ir al atardecer para la vista desde el mirador.' },\n  { nombre: 'Museo del Oro Quimbaya', municipio: 'Armenia', lat: 4.553, lon: -75.659, intereses: ['cultura'],\n    descripcion: 'Orfebrería y cerámica de la cultura Quimbaya.', duracion: '2 horas', entrada_cop: 0,\n    tip: 'Ideal para un día lluvioso.' },\n  { nombre: 'Parque del Café', municipio: 'Montenegro', lat: 4.539, lon: -75.771, intereses: ['familia','aventura','cafe'],\n    descripcion: 'Parque temático con atracciones mecánicas, teleférico y show del café.', duracion: 'Día completo', entrada_cop: 110000,\n    tip: 'Comprar la entrada en línea y llegar a la apertura.' },\n  { nombre: 'PANACA', municipio: 'Quimbaya', lat: 4.627, lon: -75.808, intereses: ['familia','naturaleza'],\n    descripcion: 'Parque agropecuario interactivo con animales y espectáculos.', duracion: 'Día completo', entrada_cop: 100000,\n    tip: 'Revisar el horario de los shows al entrar.' },\n  { nombre: 'Recorrido en finca cafetera', municipio: 'Circasia', lat: 4.618, lon: -75.636, intereses: ['cafe','cultura','gastronomia'],\n    descripcion: 'Tour del grano a la taza: siembra, recolección, beneficio y cata.', duracion: '3 horas', entrada_cop: 60000,\n    tip: 'Reservar con anticipación; incluye degustación.' },\n  { nombre: 'Cementerio Libre de Circasia', municipio: 'Circasia', lat: 4.617, lon: -75.639, intereses: ['cultura'],\n    descripcion: 'Cementerio laico e histórico, monumento nacional.', duracion: '1 hora', entrada_cop: 0,\n    tip: 'Combinar con la finca cafetera el mismo día.' },\n  { nombre: 'Jardín Botánico y Mariposario del Quindío', municipio: 'Calarcá', lat: 4.511, lon: -75.640, intereses: ['naturaleza','familia'],\n    descripcion: 'Mariposario en forma de mariposa, bosque andino y mirador.', duracion: '3 horas', entrada_cop: 40000,\n    tip: 'Las mariposas están más activas en mañanas soleadas.' },\n  { nombre: 'Miradores de Buenavista', municipio: 'Buenavista', lat: 4.360, lon: -75.738, intereses: ['naturaleza','cafe'],\n    descripcion: 'El pueblo más alto del Quindío, con vista al valle del río La Vieja.', duracion: '3 horas', entrada_cop: 0,\n    tip: 'Tomar un café de origen en alguno de los miradores.' },\n  { nombre: 'Pijao, pueblo sin prisa', municipio: 'Pijao', lat: 4.334, lon: -75.704, intereses: ['cultura','gastronomia'],\n    descripcion: 'Primer municipio de Colombia en la red Cittaslow; arquitectura de bahareque.', duracion: '3 horas', entrada_cop: 0,\n    tip: 'Combinar con Buenavista, que queda cerca.' },\n  { nombre: 'Termales y rafting en el río La Vieja', municipio: 'Quimbaya', lat: 4.600, lon: -75.830, intereses: ['aventura'],\n    descripcion: 'Balsaje y rafting suave por el río que separa Quindío y Valle.', duracion: '4 horas', entrada_cop: 70000,\n    tip: 'Llevar ropa de cambio y bloqueador.' },\n];\n\nconst q = String(query || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();\nconst norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');\n\nlet res = destinos;\nif (q && q !== 'todos') {\n  const terms = q.split(/[\\s,;]+/).filter(t => t.length > 2);\n  res = destinos.filter(d => terms.some(t =>\n    norm(d.nombre).includes(t) || norm(d.municipio).includes(t) || d.intereses.some(i => i.includes(t))));\n}\nif (!res.length) return `No encontré destinos para \"${query}\". Intereses válidos: naturaleza, cultura, cafe, familia, aventura, gastronomia. También puedes buscar por municipio o usar \"todos\".`;\n\nreturn JSON.stringify({\n  nota: 'Precios de entrada en pesos colombianos, de referencia; deben verificarse en los canales oficiales.',\n  resultados: res,\n}, null, 2);"
+      },
+      "id": "3552e730-de94-4ed7-9186-0a7b08573b14",
+      "name": "catalogo_destinos",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consulta el pronóstico del clima real de los próximos 4 días para unas coordenadas (usa las del catálogo de destinos). Devuelve temperatura máxima y mínima, probabilidad de lluvia (%) y código WMO del clima por día.",
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "={{ $fromAI('latitud', 'Latitud del destino, por ejemplo 4.638', 'number') }}"
+            },
+            {
+              "name": "longitude",
+              "value": "={{ $fromAI('longitud', 'Longitud del destino, por ejemplo -75.487', 'number') }}"
+            },
+            {
+              "name": "daily",
+              "value": "temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code"
+            },
+            {
+              "name": "timezone",
+              "value": "America/Bogota"
+            },
+            {
+              "name": "forecast_days",
+              "value": "4"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7b9d54e6-e1f5-4090-a26b-34af3b00399d",
+      "name": "consultar_clima",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        704,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "name": "calcular_presupuesto",
+        "description": "Calcula el presupuesto estimado del viaje en pesos colombianos. Entrada: un JSON como texto con las claves personas (número), dias (número), nivel ('economico', 'medio' o 'premium') y entradas_por_persona (suma en COP de las entradas de las actividades elegidas del catálogo). Ejemplo: {\"personas\": 2, \"dias\": 3, \"nivel\": \"medio\", \"entradas_por_persona\": 130000}",
+        "jsCode": "// Herramienta: calcular_presupuesto\n// Entrada (query): JSON con { \"personas\": 2, \"dias\": 3, \"nivel\": \"medio\", \"entradas_por_persona\": 150000 }\nlet p;\ntry {\n  const txt = String(query || '');\n  p = JSON.parse(txt.slice(txt.indexOf('{'), txt.lastIndexOf('}') + 1));\n} catch (e) {\n  return 'Error: envía un JSON como {\"personas\": 2, \"dias\": 3, \"nivel\": \"medio\", \"entradas_por_persona\": 150000}';\n}\n\nconst personas = Math.max(1, parseInt(p.personas) || 1);\nconst dias = Math.max(1, parseInt(p.dias) || 1);\nconst nivel = String(p.nivel || 'medio').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');\nconst entradas = Math.max(0, Number(p.entradas_por_persona) || 0);\n\n// Costos diarios de referencia por persona (COP)\nconst tarifas = {\n  economico: { alojamiento: 60000, comida: 50000, transporte: 25000, etiqueta: 'Económico (hostal, corrientazo, bus/yipao)' },\n  medio:     { alojamiento: 140000, comida: 90000, transporte: 50000, etiqueta: 'Medio (hotel o finca, restaurantes típicos, taxis)' },\n  premium:   { alojamiento: 330000, comida: 180000, transporte: 120000, etiqueta: 'Premium (hotel boutique, gastronomía, transporte privado)' },\n};\nconst t = tarifas[nivel] || tarifas.medio;\nconst noches = Math.max(1, dias - 1);\n\nconst fmt = v => '$' + Math.round(v).toLocaleString('es-CO');\nconst aloj = t.alojamiento * noches * personas;\nconst com = t.comida * dias * personas;\nconst trans = t.transporte * dias * personas;\nconst ent = entradas * personas;\nconst sub = aloj + com + trans + ent;\nconst imprevistos = sub * 0.10;\nconst total = sub + imprevistos;\n\nreturn [\n  `Nivel: ${t.etiqueta} · ${personas} persona(s) · ${dias} día(s) / ${noches} noche(s)`,\n  '',\n  '| Concepto | Total |',\n  '|---|---|',\n  `| 🏨 Alojamiento (${noches} noches) | ${fmt(aloj)} |`,\n  `| 🍽️ Alimentación | ${fmt(com)} |`,\n  `| 🚙 Transporte local | ${fmt(trans)} |`,\n  `| 🎟️ Entradas y actividades | ${fmt(ent)} |`,\n  `| 🧯 Imprevistos (10 %) | ${fmt(imprevistos)} |`,\n  `| **TOTAL** | **${fmt(total)}** |`,\n  `| **Por persona** | **${fmt(total / personas)}** |`,\n  '',\n  'Valores de referencia en pesos colombianos (COP); no incluyen el transporte hasta el Quindío.',\n].join('\\n');"
+      },
+      "id": "ffc6136f-1d4e-4375-8432-1df142bc1b05",
+      "name": "calcular_presupuesto",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        928,
+        720
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "61719ff6-4069-4372-9839-d9441a8159d8",
+      "name": "Wikipedia",
+      "type": "@n8n/n8n-nodes-langchain.toolWikipedia",
+      "typeVersion": 1,
+      "position": [
+        1152,
+        720
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "cb453eb0-3d1f-4ba1-a369-b8dcade37a81",
+      "name": "Calculadora",
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        720
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "e0906191-83a3-4750-a76f-313cd1603679",
+      "name": "Pensar",
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        720
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "¿Es texto?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es texto?": {
+      "main": [
+        [
+          {
+            "node": "Preparar mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Avisar: solo texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar mensaje": {
+      "main": [
+        [
+          {
+            "node": "YIPAO (Agente orquestador)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Mostrar 'escribiendo...'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YIPAO (Agente orquestador)": {
+      "main": [
+        [
+          {
+            "node": "Formatear para Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear para Telegram": {
+      "main": [
+        [
+          {
+            "node": "Enviar respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "YIPAO (Agente orquestador)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memoria por chat": {
+      "ai_memory": [
+        [
+          {
+            "node": "YIPAO (Agente orquestador)",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "catalogo_destinos": {
+      "ai_tool": [
+        [
+          {
+            "node": "YIPAO (Agente orquestador)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar_clima": {
+      "ai_tool": [
+        [
+          {
+            "node": "YIPAO (Agente orquestador)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "calcular_presupuesto": {
+      "ai_tool": [
+        [
+          {
+            "node": "YIPAO (Agente orquestador)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wikipedia": {
+      "ai_tool": [
+        [
+          {
+            "node": "YIPAO (Agente orquestador)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculadora": {
+      "ai_tool": [
+        [
+          {
+            "node": "YIPAO (Agente orquestador)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pensar": {
+      "ai_tool": [
+        [
+          {
+            "node": "YIPAO (Agente orquestador)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3786e066-1b85-4b32-9d27-c48699d5a0d9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1723e27e245068f47a3a1ca56e0b1231617e7952a3c3beb5b61bccf8960833f6"
+  },
+  "nodeGroups": [],
+  "id": "lHiN6tFW1iELNncK",
+  "tags": []
+}
